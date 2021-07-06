@@ -1,0 +1,164 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: influxdb-conf
+    labels:
+        app: influxdb42
+data:
+    influxdb.conf: |
+        # Meta 데이터 저장할 위치 지정.
+        [meta]
+          # Where the metadata/raft database is stored
+          dir = "/var/lib/influxdb/meta"
+
+        # 실제 데이터를 저장할 디렉토릴 지정.
+        [data]
+          # The directory where the TSM storage engine stores TSM files.
+          dir = "/var/lib/influxdb/data"
+          # The directory where the TSM storage engine stores WAL files.
+          wal-dir = "/var/lib/influxdb/wal"
+
+        [coordinator]
+          # write request 가 기다릴시간. 이 시간이 지나면 에러 리턴
+          write-timeout = "10s"
+          # 최대 동시 쿼리 개수. 0 은 unlimited.
+          max-concurrent-queries = 0
+          # 시스템이 kill 하기전에 쿼리 수행허용 시간
+          query-timeout = "0s"
+          # slow 쿼리를 기록할 한계시간. 0 은 slow 쿼리 로깅을 하지 않음.
+          log-queries-after = "0s"
+          max-select-point = 0
+          max-select-series = 0
+          max-select-buckets = 0
+
+        # 데이터 보관기간 설정.
+        [retention]
+          # 설정 사용함.
+          enabled = true
+          # 보관기간 정책 체크할 인터발 시간. 30분에 한번씩 보관기간 정책 체크.
+          check-interval = "30m0s"
+
+        # 모니터링 데이터를 위한 내부 데이터베이스 생성 설정.
+        [monitor]
+          # 내부 데이터베이스 생성 활성화.
+          store-enabled = true
+          # 저장할 데이터베이스 이름.
+          store-database = "_internal"
+          # 10초 마다 통계치를 저장.
+          store-interval = "10s"
+
+        # HTTP 엔드포인트 설정.
+        # 이것은 InfluxDB 에서 데이터를 넣고 빼는데 핵심이 되는 매커니즘.
+        [http]
+          enabled = true
+          bind-address = ":8086"
+
+        [[graphite]]
+          enabled = false
+ 
+        [[collectd]]
+          enabled = false
+ 
+        [[opentsdb]]
+          enabled = false
+ 
+        [[udp]]
+          enabled = false
+
+        # 지속적인 쿼리. 이 기능은 아주 유용하다고 하여, 일단 활성화를 해둔다.
+        [continuous_queries]
+          enabled = true
+          log-enabled = true
+          run-interval = "5s"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: influxdb42
+    labels:
+        app: influxdb42
+type: Opaque
+stringData:
+    INFLUXDB_CONFIG_PATH: /etc/influxdb.conf
+    INFLUXDB_DB: telegraf42
+    INFLUXDB_ADMIN_USER: admin
+    INFLUXDB_ADMIN_PASSWORD: 123!@#
+    INFLUXDB_USER: tjung
+    INFLUXDB_USER_PASSWORD: 123!@#
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: influxdb-pv
+    labels:
+        app: influxdb42
+spec:
+    accessModes:
+        - ReadWriteOnce
+    resources:
+        requests:
+            storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: influxdb42
+    labels:
+        app: influxdb42
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: influxdb42
+    template:
+        metadata:
+            labels:
+                app: influxdb42
+        spec:
+            containers:
+                - name: influxdb42
+                  imagePullPolicy: Never
+                  image: influxdb42
+                  ports:
+                      - containerPort: 8086
+                        name: influxdb
+                        protocol: TCP
+                  volumeMounts:
+                      - name: influxdb-pv
+                        mountPath: /var/lib/influxdb
+                      - name: influxdb-conf
+                        mountPath: /etc/influxdb.conf
+                        subPath: influxdb.conf
+                        readOnly: true
+                  envFrom:
+                      - secretRef:
+                          name: influxdb42
+            volumes:
+                - name: influxdb-pv
+                  persistentVolumeClaim:
+                      claimName: influxdb-pv
+                - name: influxdb-conf
+                  configMap:
+                      name: influxdb-conf
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: influxdb42
+    labels:
+        app: influxdb42
+    annotations:
+        metallb.universe.tf/allow-shared-ip: shared
+spec:
+    type: ClusterIP
+    ports:
+        - name: influxdb
+          port: 8086
+          protocol: TCP
+          targetPort: 8086
+    selector:
+        app: influxdb42

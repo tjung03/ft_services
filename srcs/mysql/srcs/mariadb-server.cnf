@@ -1,0 +1,10 @@
+[mysqld]
+user = root
+datadir = /var/lib/mysql
+port = 3306
+bind-address = 0.0.0.0
+skip-networking = 0
+log-bin = /var/lib/mysql/mysql-bin
+expire_logs_days = 7
+max_binlog_size = 250M
+binlog_cache_size = 2M

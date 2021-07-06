@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: nginx42
+    labels:
+        app: nginx42
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: nginx42
+    template:
+        metadata:
+            labels:
+                app: nginx42
+        spec:
+            containers:
+                - name: nginx42
+                  imagePullPolicy: Never
+                  image: nginx42
+                  ports:
+                      - containerPort: 80
+                        name: http
+                        protocol: TCP
+                      - containerPort: 443
+                        name: https
+                        protocol: TCP
+                      - containerPort: 22
+                        name: ssh
+                        protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    annotations:
+        metallb.universe.tf/allow-shared-ip: shared
+    name: nginx42
+    labels:
+        app: nginx42
+spec:
+    type: LoadBalancer
+    ports:
+        - name: http
+          port: 80
+          protocol: TCP
+          targetPort: 80
+        - name: https
+          port: 443
+          protocol: TCP
+          targetPort: 443
+        - name: ssh
+          port: 22
+          protocol: TCP
+          targetPort: 22
+    selector:
+        app: nginx42

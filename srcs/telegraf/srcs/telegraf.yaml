@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: telegraf-conf
+    labels:
+        app: telegraf42
+data:
+    telegraf.conf: |
+        [agent]
+        interval = "10s"
+        round_interval = true
+        metric_batch_size = 1000
+        metric_buffer_limit = 10000
+        collection_jitter = "0s"
+        flush_interval = "10s"
+        flush_jitter = "0s"
+        precision = ""
+        hostname = ""
+        omit_hostname = false
+
+        [[outputs.influxdb]]
+        urls = ["http://influxdb42:8086"]
+        database = "telegraf42"
+        username = "tjung"
+        password = "123!@#"
+
+        [[inputs.docker]]
+        endpoint = "unix:///var/run/docker.sock"
+        gather_services = false
+        container_names = []
+        source_tag = false
+        container_name_include = []
+        container_name_exclude = []
+        perdevice = true
+        total = false
+        docker_label_include = []
+        docker_label_exclude = []
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: telegraf42
+    labels:
+        app: telegraf42
+type: Opaque
+stringData:
+    INFLUXDB_DB: telegraf42
+    INFLUXDB_URL: http://influxdb42:8086
+    INFLUXDB_USER: tjung
+    INFLUXDB_USER_PASSWORD: 123!@#
+        
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: telegraf42
+    labels:
+        app: telegraf42
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: telegraf42
+    template:
+        metadata:
+            labels:
+                app: telegraf42
+        spec:
+            containers:
+                - name: telegraf42
+                  imagePullPolicy: Never
+                  image: telegraf42
+                  volumeMounts:
+                      - name: telegraf-conf
+                        mountPath: /etc/telegraf/telegraf.conf
+                        subPath: telegraf.conf
+                        readOnly: true
+                      - name: docker-socket
+                        mountPath: /var/run/docker.sock
+                  envFrom:
+                      - secretRef:
+                            name: telegraf42
+            volumes:
+                - name: telegraf-conf
+                  configMap:
+                      name: telegraf-conf
+                - name: docker-socket
+                  hostPath:
+                      path: /var/run/docker.sock
+                      type: Socket

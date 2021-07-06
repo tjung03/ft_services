@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: wordpress42
+    labels:
+        app: wordpress42
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: wordpress42
+    template:
+        metadata:
+            labels:
+                app: wordpress42
+        spec:
+            containers:
+                - name: wordpress42
+                  imagePullPolicy: Never
+                  image: wordpress42
+                  ports:
+                      - name: wordpress
+                        containerPort: 5050
+                        protocol: TCP
+                  livenessProbe:
+                      httpGet:
+                          path: /
+                          port: 5050
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: wordpress42
+    labels:
+        app: wordpress42
+    annotations:
+        metallb.universe.tf/allow-shared-ip: shared
+spec:
+    type: LoadBalancer
+    ports:
+        - name: wordpress42
+          port: 5050
+          protocol: TCP
+          targetPort: 5050
+    selector:
+        app: wordpress42

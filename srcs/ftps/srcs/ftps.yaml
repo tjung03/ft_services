@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: ftps42
+    labels:
+        app: ftps42
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: ftps42
+    template:
+        metadata:
+            labels:
+                app: ftps42
+        spec:
+            containers:
+                - name: ftps42
+                  imagePullPolicy: Never
+                  image: ftps42
+                  ports:
+                      - containerPort: 20
+                        name: ftp-data
+                        protocol: TCP
+                      - containerPort: 21
+                        name: ftp-ctrl
+                        protocol: TCP
+                      - containerPort: 20001
+                        name: pasv1
+                        protocol: TCP
+                      - containerPort: 20002
+                        name: pasv2
+                        protocol: TCP
+                  livenessProbe:
+                      initialDelaySeconds: 20
+                      periodSeconds: 10
+                      timeoutSeconds: 5
+                      tcpSocket:
+                          port: 21
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    annotations:
+        metallb.universe.tf/allow-shared-ip: shared
+    name: ftps42
+    labels:
+        app: ftps42
+spec:
+    type: LoadBalancer
+    ports:
+        - name: ftp-data
+          port: 20
+          protocol: TCP
+          targetPort: 20
+        - name: ftp-ctrl
+          port: 21
+          protocol: TCP
+          targetPort: 21
+        - name: pasv1
+          port: 20001
+          protocol: TCP
+          targetPort: 20001
+        - name: pasv2
+          port: 20002
+          protocol: TCP
+          targetPort: 20002
+    selector:
+        app: ftps42

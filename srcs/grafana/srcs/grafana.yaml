@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: grafana-conf
+    labels:
+        app: grafana42
+data:
+    datasources.yaml: |
+        apiVersion: 1
+        datasources:
+            - name: influxdb42
+              type: influxdb
+              access: proxy
+              orgId: 1
+              database: telegraf42
+              user: tjung
+              password: 123!@#
+              url: http://influxdb42:8086
+              
+    dashboards.yaml: |
+        apiVersion: 1
+        providers:
+            - name: 'influxdb'
+              orgId: 1
+              folder: ''
+              folderUid: ''
+              type: file
+              options:
+                  path: /usr/share/grafana/public/dashboards
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: grafana42
+    labels:
+        app: grafana42
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: grafana42
+    template:
+        metadata:
+            labels:
+                app: grafana42
+        spec:
+            containers:
+                - name: grafana42
+                  imagePullPolicy: Never
+                  image: grafana42
+                  ports:
+                      - name: grafana
+                        containerPort: 3000
+                        protocol: TCP
+                  volumeMounts:
+                      - name: grafana-conf
+                        mountPath: /usr/share/grafana/conf/provisioning/datasources/datasources.yaml
+                        subPath: datasources.yaml
+                        readOnly: true
+                      - name: grafana-conf
+                        mountPath: /usr/share/grafana/conf/provisioning/dashboards/dashboards.yaml
+                        subPath: dashboards.yaml
+                        readOnly: true
+            volumes:
+                - name: grafana-conf
+                  configMap:
+                      name: grafana-conf
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    annotations:
+        metallb.universe.tf/allow-shared-ip: shared
+    name: grafana42
+    labels:
+        app: grafana42
+spec:
+    type: LoadBalancer
+    ports:
+        - name: grafana
+          port: 3000
+          protocol: TCP
+          targetPort: 3000
+    selector:
+        app: grafana42
