@@ -29,7 +29,7 @@
     └── grafana/         # 데이터 소스·대시보드 provisioning
 ```
 
-각 서비스 디렉토리는 `Dockerfile`과 `srcs/`의 설정·시작 스크립트·Kubernetes manifest로 구성됩니다. 상세 실행 조건은 [실행·확인 가이드](docs/operations.md)에 정리되어 있습니다.
+서비스별 `Dockerfile`과 Kubernetes manifest를 중심으로 설정·초기화 파일을 배치했습니다. 상세 실행 조건은 [실행·확인 가이드](docs/operations.md)에 정리되어 있습니다.
 
 ## 서비스 연결
 

@@ -39,7 +39,7 @@ kubectl get deployments,pods,svc,pvc
 kubectl get pods -n metallb-system
 ```
 
-8개 Deployment의 가용 Pod, LoadBalancer Service의 외부 IP, `mysql-pv`·`influxdb-pv`의 `Bound` 상태를 확인합니다. PVC는 StorageClass를 지정하지 않으므로 기본 StorageClass의 동적 프로비저닝이 필요합니다.
+8개 Deployment의 가용 Pod, LoadBalancer Service의 외부 IP, `mysql-pv`·`influxdb-pv`의 `Bound` 상태를 확인합니다. PVC는 StorageClass를 지정하지 않으므로 기본 StorageClass의 동적 프로비저닝 또는 조건에 맞는 PV가 필요합니다.
 
 웹 서비스는 시작 시 다운로드·DB 초기화가 진행됩니다. 준비가 늦거나 재시작을 반복하면 다음 로그와 이벤트를 확인합니다.
 
@@ -86,7 +86,7 @@ kubectl exec deployment/influxdb42 -- influx -database telegraf42 -execute 'SHOW
 kubectl exec deployment/influxdb42 -- influx -database telegraf42 -execute 'SHOW TAG KEYS FROM docker_container_cpu'
 ```
 
-대시보드는 `docker_container_cpu.usage_total`과 `docker_container_mem.usage`를 `last()`로 조회합니다. CPU 패널은 누적 사용량 값이며 사용률 퍼센트로 변환하는 쿼리는 없습니다. 패널의 필터는 `app=서비스이름42`이므로 수집된 Docker label의 실제 태그 이름과 값이 맞는지 확인합니다.
+대시보드는 `docker_container_cpu.usage_total`과 `docker_container_mem.usage`를 `last()`로 조회합니다. CPU 패널은 누적 사용량을 표시합니다. 패널의 필터는 `app=서비스이름42`이므로 수집된 Docker label의 실제 태그 이름과 값이 맞는지 확인합니다.
 
 InfluxDB 이미지는 `influxd`를 직접 실행합니다. Secret에 선언된 `INFLUXDB_DB`·사용자 환경 변수와 별개로, DB·사용자의 실제 생성 여부는 위 명령과 DB 조회로 확인합니다.
 
