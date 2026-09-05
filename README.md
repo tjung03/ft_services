@@ -9,7 +9,7 @@
 | 서비스 분리 | Nginx, WordPress, phpMyAdmin, DB, FTPS와 모니터링 3종을 개별 Deployment로 배포 | [srcs](srcs) |
 | 외부 접속 | MetalLB Layer 2와 공유 IP 설정, 서비스별 포트 분리 | [MetalLB](srcs/metallb/metallb.yaml), [Nginx Service](srcs/nginx/srcs/nginx.yaml) |
 | 웹 요청 연결 | HTTP → HTTPS 전환, WordPress 리다이렉트, phpMyAdmin 프록시 | [Nginx 설정](srcs/nginx/srcs/default.conf) |
-| 데이터 저장 | DB 2Gi·InfluxDB 1Gi PVC를 데이터 디렉토리에 연결 | [DB](srcs/mysql/srcs/mysql.yaml), [InfluxDB](srcs/influxdb/srcs/influxdb.yaml) |
+| 데이터 저장 | 영구 볼륨 요청(PVC)으로 확보한 DB 2Gi·InfluxDB 1Gi 저장 공간을 데이터 디렉토리에 연결 | [DB](srcs/mysql/srcs/mysql.yaml), [InfluxDB](srcs/influxdb/srcs/influxdb.yaml) |
 | 메트릭 시각화 | Docker 메트릭 수집·저장과 서비스별 CPU·메모리 대시보드 8개 구성 | [Telegraf](srcs/telegraf/srcs/telegraf.yaml), [Grafana](srcs/grafana/srcs/grafana.yaml) |
 
 ## 저장소 구조
@@ -26,7 +26,7 @@
     ├── ftps/            # vsftpd·TLS·passive 포트
     ├── influxdb/        # 메트릭 저장·PVC
     ├── telegraf/        # Docker socket 기반 수집
-    └── grafana/         # 데이터 소스·대시보드 provisioning
+    └── grafana/         # 데이터 소스·대시보드 자동 등록
 ```
 
 서비스별 `Dockerfile`과 Kubernetes manifest를 중심으로 설정·초기화 파일을 배치했습니다. 상세 실행 조건은 [실행·확인 가이드](docs/operations.md)에 정리되어 있습니다.
