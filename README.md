@@ -2,6 +2,8 @@
 
 **Minikube 위에 웹·DB·FTPS·모니터링 서비스를 각각 배포하고, MetalLB로 외부 접속을 구성한 42 Seoul 프로젝트입니다.** 2021년에 작성한 Kubernetes 실습으로, 서비스별 Docker 이미지 8개와 Deployment를 구성하고 배포 과정을 `setup.sh`로 연결합니다.
 
+![ft_services의 웹 애플리케이션과 MariaDB 연결, Telegraf·InfluxDB·Grafana 메트릭 흐름](docs/images/services.svg)
+
 ## 핵심 구현
 
 | 주제 | 구현 내용 | 코드 |
